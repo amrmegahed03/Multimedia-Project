@@ -23,7 +23,12 @@ function startSimulation() {
     }
 
     for(let i=0 ; i<=packetCount ; i++){
-        const randomDelay = Math.floor(Math.random() * (networkDelay + 1)); // Random delay between 0 and networkDelay
+        // Random delay between more than 0 and less than or equal to network delay
+        const randomDelay = Math.ceil(Math.random() * (networkDelay + 1));
+        //check that the random delay is not 0
+        while(randomDelay == 0){
+            randomDelay = Math.floor(Math.random() * (networkDelay + 1));
+        }
         calculatedDelay.push(randomDelay);
     }
 
