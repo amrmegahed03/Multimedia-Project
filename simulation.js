@@ -8,10 +8,6 @@ function startSimulation() {
 
     const canvas = document.getElementById("simulationCanvas");
     canvas.height = 40 * packetCount + 100;
-    canvas.width = 50 * (playbackDelay + packetCount) + 150;
-
-    // Call function to draw the grid and axes
-    drawGrid(packetCount, playbackDelay);
 
     // Create an array to store the generation time of each packet
     let generationTimes = [];
@@ -53,6 +49,7 @@ function startSimulation() {
         }
     }
 
+
     for(let i = 0 ; i<=packetCount ; i++){
         const playbackTime = generationTimes[i] + playbackDelay;
         playbackDelayTimes.push(playbackTime);
@@ -67,6 +64,16 @@ function startSimulation() {
         }
     }
     
+    // get the maximum time value for the x-axis
+    if (networkDelayCurveTimes[packetCount] >= playbackDelayTimes[packetCount]) {
+        var maxtime = networkDelayCurveTimes[packetCount];
+    } else {
+        var maxtime = playbackDelayTimes[packetCount];
+    }
+
+    canvas.width =50* maxtime + 150;
+
+    drawGrid(packetCount, maxtime);
 
     console.log("Generation Times: ", generationTimes);
     console.log("calculated Delay: ", calculatedDelay);
@@ -81,7 +88,7 @@ function startSimulation() {
 }
 
 // Function to draw the grid with x-axis and y-axis on the canvas
-function drawGrid(packetCount, playbackDelay) {
+function drawGrid(packetCount, maxTime) {
     // Get the canvas element and its context
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
@@ -136,8 +143,8 @@ function drawGrid(packetCount, playbackDelay) {
     }
 
     // Draw x-axis labels
-    const maxTime = playbackDelay + packetCount ; // Maximum time value for the x-axis
-    for (let i = 0; i <= maxTime; i++) {
+    const maxtime = maxTime ; // Maximum time value for the x-axis
+    for (let i = 0; i <= maxtime; i++) {
         ctx.fillText(i, offsetX + i * xScale, offsetY + 20); // x-axis labels
     }
 }
