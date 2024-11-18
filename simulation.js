@@ -5,6 +5,7 @@ function startSimulation() {
     const packetCount = parseInt(document.getElementById("packetCount").value);
     const networkDelay = parseInt(document.getElementById("networkDelay").value);
     const playbackDelay = parseInt(document.getElementById("playbackDelay").value);
+   // const bufferLength = parseInt(document.getElementById("bufferLength").value);
 
     const canvas = document.getElementById("simulationCanvas");
     canvas.height = 40 * packetCount + 100;
@@ -15,7 +16,9 @@ function startSimulation() {
     let networkDelayCurveTimes=[];
     let lostPackets=[];
     let playbackDelayTimes =[];
-    
+    //create an array for the buffer of lenght bufferLength
+    //let buffer = Array(bufferLength).fill(0);
+
     // Calculate generation times for each packet and store them in the array
     for (let i = 0; i <= packetCount; i++) {
         const generationTime = startTime + i;  // Add a time increment for each packet
@@ -70,6 +73,8 @@ function startSimulation() {
     } else {
         var maxtime = playbackDelayTimes[packetCount];
     }
+
+
 
     canvas.width =50* maxtime + 150;
 
