@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DMET704 Project</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            text-align: center;
+        }
+        .input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Add spacing between input boxes */
+            margin-bottom: 10px;
+        }
+        .input-group label {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+        }
+        .input-group input {
+            padding: 5px;
+            border-radius: 15px; /* Make the input boxes rounded */
+            border: 1px solid #ccc;
+            outline: none;
+        }
+        .button-group {
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 15px; /* Make the button rounded */
+            border: none;
+            background-color: #5b088b;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #5b088b;
+        }
+    </style>
+</head>
+<body>
+    <h1>Packet Transmission</h1>
+
+    <!-- Input fields for simulation parameters -->
+    <div class="input-group">
+        <label>Start Time: <input type="number" id="startTime" value="0"></label>
+        <label>Packet Count: <input type="number" id="packetCount" value="10"></label>
+    </div>
+    <div class="input-group">
+        <label>Network Delay Range: <input type="number" id="networkDelay" value="5"></label>
+        <label>Playback Delay: <input type="number" id="playbackDelay" value="7"></label>
+    </div>
+    <div class="input-group">
+        <label>Buffer Size: <input type="number" id="bufferSize" value="5"></label>
+    </div>
+    <div class="button-group">
+        <button onclick="startSimulation()">Start Simulation</button>
+    </div>
+
+    <!-- Canvas to draw the curves -->
+    <canvas id="simulationCanvas" width="1000" height="500" style="border:1px solid #000; display:block; margin: 50px auto 0;"></canvas>
+
+    <!-- Display simulation results -->
+    <div class="results-group" style="text-align: center; margin-top: 20px;">
+        <p id="minBufferSize"></p>
+        <p id="avgBufferSize"></p>
+        <p id="lostPackets"></p>
+        <p id="estimatedPlayoutDelay"></p>
+    </div>
+
+    <script src="new.js"></script>
+</body>
+</html>
