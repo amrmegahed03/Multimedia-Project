@@ -5,7 +5,7 @@ function startSimulation() {
     const packetCount = parseInt(document.getElementById("packetCount").value);
     const networkDelay = parseInt(document.getElementById("networkDelay").value);
     const playbackDelay = parseInt(document.getElementById("playbackDelay").value);
-   // const bufferLength = parseInt(document.getElementById("bufferLength").value);
+   const bufferSize = parseInt(document.getElementById("bufferSize").value);
 
     const canvas = document.getElementById("simulationCanvas");
     canvas.height = 40 * packetCount + 100;
@@ -16,8 +16,9 @@ function startSimulation() {
     let networkDelayCurveTimes=[];
     let lostPackets=[];
     let playbackDelayTimes =[];
-    //create an array for the buffer of lenght bufferLength
-    //let buffer = Array(bufferLength).fill(0);
+    //create an array for the buffer of  bufferSize
+    let buffer = Array(bufferSize).fill(0);
+    
 
     // Calculate generation times for each packet and store them in the array
     for (let i = 0; i <= packetCount; i++) {
@@ -87,9 +88,8 @@ function startSimulation() {
     console.log("Lost Packets : " , lostPackets);
     
     drawPacketGenerationCurve(generationTimes);
-    drawNetworkDelayCurve(networkDelayCurveTimes);
+    drawRecievedNetworkCurve(networkDelayCurveTimes);
     drawplayDelayCurve(playbackDelayTimes);
-    drawlostCurve(lostPackets , networkDelayCurveTimes)
 }
 
 // Function to draw the grid with x-axis and y-axis on the canvas
@@ -190,7 +190,7 @@ function drawPacketGenerationCurve(generationTimes) {
 }
 
 
-function drawNetworkDelayCurve(networkDelayCurveTimes) {
+function drawRecievedNetworkCurve(networkDelayCurveTimes) {
     // Get the canvas element and its context
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
