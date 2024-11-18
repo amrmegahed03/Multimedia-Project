@@ -146,7 +146,7 @@ function drawPacketGenerationCurve(generationTimes) {
     const xScale = 50;  // Space between each x-axis label
     const yScale = 40;  // Space between each y-axis label
     const offsetX = 50; // Starting position of the x-axis
-    const offsetY = canvas.height - 30; // Starting position of the y-axis (bottom of canvas)
+    const offsetY = canvas.height - 70; // Starting position of the y-axis (bottom of canvas)
 
     // Set color for the packet generation curve
     ctx.beginPath();
@@ -156,18 +156,16 @@ function drawPacketGenerationCurve(generationTimes) {
     ctx.moveTo(offsetX + generationTimes[0] * xScale, offsetY - 0 * yScale);
 
     // Draw the curve as a staircase (no diagonals, just horizontal and vertical lines)
-    for (let i = 0; i <= generationTimes.length; i++) {
-        const time = generationTimes[i];  // Use the generation time from the array
-        const packetCountAtTime = i; // The y-value is the packet number
+        
 
-        // Draw horizontal step (move to the next time step on x-axis)
-        ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
-
-        // Draw vertical step (move to the next packet count on the y-axis)
-        if (i < generationTimes.length - 1) {
-            ctx.lineTo(offsetX + (time + 1) * xScale, offsetY - packetCountAtTime * yScale);
+        for (let i = 0; i < generationTimes.length-1; i++) {
+            const time = generationTimes[i];  
+            const packetCountAtTime = i;  
+            ctx.lineTo(offsetX + time * xScale, offsetY - (packetCountAtTime - 1) * yScale);
+            ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
         }
-    }
+    
+    
 
     // Stroke the path (actually draw it on the canvas)
     ctx.stroke();
@@ -183,7 +181,7 @@ function drawNetworkDelayCurve(networkDelayCurveTimes) {
     const xScale = 50;  // Space between each x-axis label (time)
     const yScale = 40;  // Space between each y-axis label (packet count)
     const offsetX = 50; // Starting position of the x-axis
-    const offsetY = canvas.height - 30; // Starting position of the y-axis (bottom of canvas)
+    const offsetY = canvas.height - 70; // Starting position of the y-axis (bottom of canvas)
 
     // Set color for the network delay curve
     ctx.beginPath();
@@ -193,7 +191,7 @@ function drawNetworkDelayCurve(networkDelayCurveTimes) {
     ctx.moveTo(offsetX + networkDelayCurveTimes[0] * xScale, offsetY - 0 * yScale); // Start from packet 0
 
     // Draw the curve as a staircase
-    for (let i = 1; i <= networkDelayCurveTimes.length; i++) {
+    for (let i = 0; i < networkDelayCurveTimes.length - 1; i++) {
         const time = networkDelayCurveTimes[i];  // The x-coordinate will be based on the network delay time
         const packetCountAtTime = i;  // The y-coordinate increases sequentially as packets arrive
 
@@ -214,12 +212,12 @@ function drawplayDelayCurve(playbackDelayTimes) {
     const xScale = 50;  
     const yScale = 40; 
     const offsetX = 50; 
-    const offsetY = canvas.height - 30; 
+    const offsetY = canvas.height - 70; 
     ctx.beginPath();
     ctx.strokeStyle = "green";
     ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY - 0 * yScale); 
 
-    for (let i = 1; i <= playbackDelayTimes.length; i++) {
+    for (let i = 0; i < playbackDelayTimes.length-1; i++) {
         const time = playbackDelayTimes[i];  
         const packetCountAtTime = i;  
         ctx.lineTo(offsetX + time * xScale, offsetY - (packetCountAtTime - 1) * yScale);
