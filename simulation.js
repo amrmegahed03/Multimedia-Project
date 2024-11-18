@@ -27,7 +27,7 @@ function startSimulation() {
         const randomDelay = Math.ceil(Math.random() * (networkDelay + 1));
         //check that the random delay is not 0
         while(randomDelay == 0){
-            randomDelay = Math.floor(Math.random() * (networkDelay + 1));
+            randomDelay = Math.ceil(Math.random() * (networkDelay + 1));
         }
         calculatedDelay.push(randomDelay);
     }
