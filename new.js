@@ -1,4 +1,3 @@
-const e = require("express");
 
 function startSimulation() {
     const startTime = parseInt(document.getElementById("startTime").value);
@@ -106,7 +105,7 @@ function startSimulation() {
     drawRecievedNetworkCurve(receivingTimes);
     drawplayDelayCurve(playbackTimes,lostPackets);
     drawbuffer(bufferTimes,lostPackets,playbackTimes,receivingTimes,maxtime, noofpacketsatatime);
-    drawlost(playbackTimes,lostPackets);
+  //  drawlost(playbackTimes,lostPackets);
 
 }
 
@@ -213,49 +212,103 @@ function drawRecievedNetworkCurve(networkDelayCurveTimes) {
     ctx.stroke();
 }
 
-function drawplayDelayCurve(playbackDelayTimes,lostPackets) {
+function drawplayDelayCurve(playbackDelayTimes, lostPackets) {
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
-    const xScale = 50;  
-    const yScale = 40; 
-    const offsetX = 50; 
-    const offsetY = canvas.height - 70; 
+
+    const xScale = 50;  // Scale for the x-axis (time)
+    const yScale = 40;  // Scale for the y-axis (packet count)
+    const offsetX = 50; // Horizontal offset for the grid
+    const offsetY = canvas.height - 70; // Vertical offset for the grid
+
     ctx.beginPath();
-    ctx.strokeStyle = "green";
-    ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY - 0 * yScale); 
+    ctx.strokeStyle = "green"; // Color for the playback delay curve
+
+    let prevPacketCount = 0; // Initialize previous packet count to 0
+
+    // Start the graph at the first point
+    ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY -0  *yScale);
+    console.log(offsetY   *yScale);
+    console.log(offsetY -0  *yScale);
+
+
+
+
 
     for (let i = 0; i < playbackDelayTimes.length; i++) {
-        if (lostPackets.includes(i)){
-            ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
-
+        const time = playbackDelayTimes[i];  // Time when packet is played
+        const packetCountAtTime = i;  // Count of packets played at this time
+        
+        // If the packet was lost, skip it
+        if (lostPackets.includes(i)) {
             continue;
         }
-        const time = playbackDelayTimes[i];  
-        const packetCountAtTime = i;  
-        ctx.lineTo(offsetX + time * xScale, offsetY - (packetCountAtTime - 1) * yScale);
+
+        // Draw the vertical line to represent packet playback at this time
+        ctx.lineTo(offsetX + time * xScale, offsetY - prevPacketCount * yScale);
+
+        // Draw the horizontal line to continue the curve at the same packet count
         ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
+
+        // Update the previous packet count
+        prevPacketCount = packetCountAtTime;
     }
+
     ctx.stroke();
 }
 
-function drawbuffer(bufferTimes , lostPackets, playbackTimes, receivingTimes, maxtime, noofpacketsatatime){
+function drawbuffer(bufferTimes, lostPackets, playbackTimes, receivingTimes, maxtime, noofpacketsatatime) {
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
-    const xScale = 50;  
-    const yScale = 40; 
-    const offsetX = 50; 
-    const offsetY = canvas.height - 70; 
+
+    const xScale = 50;  // Scale for the x-axis (time)
+    const yScale = 40;  // Scale for the y-axis (buffer size)
+    const offsetX = 50; // Horizontal offset for the grid
+    const offsetY = canvas.height - 30; // Vertical offset for the grid
+
     ctx.beginPath();
-    ctx.strokeStyle = "red";
-    ctx.moveTo(receivingTimes[0]+ offsetX * xScale, offsetY - 0 * yScale);
-    for (let i = receivingTimes[0] ; i < maxtime ; i++){
-        if(bufferTimes.includes(i)){
-            
+    ctx.strokeStyle = "red";  // Red color for the buffer line
+    ctx.setLineDash([]); // No dashes for the buffer line
+
+    let bufferCount = 0; // Start buffer count at 0
+    let firstPacketReceived = false;
+
+    for (let i = 0; i < maxtime; i++) {
+        // Determine the current buffer count (clipped to 0 to prevent negative values)
+        const currentBuffer = Math.max(0, noofpacketsatatime[i]);
+
+        if (!firstPacketReceived && currentBuffer > 0) {
+            // Mark that the first packet has been received
+            firstPacketReceived = true;
         }
+
+        // Draw the buffer line
+        if (i === 0) {
+            // Initial point at time 0 with buffer count 0
+            ctx.moveTo(offsetX, offsetY - 0 * yScale);
+        } else {
+            const prevBuffer = Math.max(0, noofpacketsatatime[i - 1]);
+
+            if (currentBuffer !== prevBuffer) {
+                // Vertical step
+                ctx.lineTo(offsetX + i * xScale, offsetY - prevBuffer * yScale);
+                // Horizontal step
+                ctx.lineTo(offsetX + i * xScale, offsetY - currentBuffer * yScale);
+            } else {
+                // Continue horizontally if the buffer count remains unchanged
+                ctx.lineTo(offsetX + i * xScale, offsetY - currentBuffer * yScale);
+            }
+        }
+
+        // Update buffer count for the next iteration
+        bufferCount = currentBuffer;
     }
 
     ctx.stroke();
 }
+
+
+
 
 //function to draw lost packets in a dootted line
 function drawlost(playbackTimes,lostPackets) {
