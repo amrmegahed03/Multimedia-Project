@@ -1,123 +1,149 @@
-// Function to start the simulation when the button is clicked
+
 function startSimulation() {
-    // Get input values from the form
     const startTime = parseInt(document.getElementById("startTime").value);
     const packetCount = parseInt(document.getElementById("packetCount").value);
     const networkDelay = parseInt(document.getElementById("networkDelay").value);
     const playbackDelay = parseInt(document.getElementById("playbackDelay").value);
-   const bufferSize = parseInt(document.getElementById("bufferSize").value);
+    const bufferSize = parseInt(document.getElementById("bufferSize").value);
 
     const canvas = document.getElementById("simulationCanvas");
     canvas.height = 40 * packetCount + 100;
 
-    // Create an array to store the generation time of each packet
     let generationTimes = [];
-    let calculatedDelay = [];
-    let networkDelayCurveTimes=[];
+    let receivingTimes=[];
     let lostPackets=[];
-    let playbackDelayTimes =[];
-    //create an array for the buffer of  bufferSize
+    let playbackTimes =[];
     let buffer = Array(bufferSize).fill(0);
-    
+    let bufferTimes = [];
+    let noofpacketsatatime = [];
 
-    // Calculate generation times for each packet and store them in the array
-    for (let i = 0; i <= packetCount; i++) {
-        const generationTime = startTime + i;  // Add a time increment for each packet
-        generationTimes.push(generationTime); // Store the generation time in the array
+    let lostPacketCount = 0;
+    let receivedPacketCount = 0;
+    let playbackPacketCount = 0;
+    let bufferPacketCount = 0;
+
+    for (let i = 0; i < packetCount; i++) {
+        const generationTime = startTime + i;
+        generationTimes.push(generationTime);
     }
 
-    for(let i=0 ; i<=packetCount ; i++){
-        // Random delay between more than 0 and less than or equal to network delay
+    for(let i=0 ; i < packetCount ; i++){
         const randomDelay = Math.ceil(Math.random() * (networkDelay + 1));
-        //check that the random delay is not 0
         while(randomDelay == 0){
             randomDelay = Math.ceil(Math.random() * (networkDelay + 1));
         }
-        calculatedDelay.push(randomDelay);
+        receivingTimes.push(generationTimes[i] + randomDelay);
     }
 
-    for (let i = 0; i <= packetCount; i++) {
-        const networkDelayTime = generationTimes[i] + calculatedDelay[i]; // Calculate the network delay time
-        
-        // Check if networkDelayTime is smaller than or equal to the previous value
-        if (i === 0 || networkDelayTime <= networkDelayCurveTimes[i - 1]) {
-            // If it's the first packet or the time is less than or equal to the previous one, use the previous time
-            if (i > 0) {
-                networkDelayCurveTimes.push(networkDelayCurveTimes[i - 1]);
-            } else {
-                networkDelayCurveTimes.push(networkDelayTime);  // For the first packet, store the first calculated time
-            }
-        } else {
-            // If the network delay time is larger than the previous one, store it
-            networkDelayCurveTimes.push(networkDelayTime);
-        }
-    }
-
-
-    for(let i = 0 ; i<=packetCount ; i++){
+    for(let i = 0 ; i < packetCount ; i++){
         const playbackTime = generationTimes[i] + playbackDelay;
-        playbackDelayTimes.push(playbackTime);
-    }
-
-    for(let i = 0 ; i<=packetCount ; i++){
-        if(networkDelayCurveTimes[i] == networkDelayCurveTimes[i+1]){
-            lostPackets[i] = networkDelayCurveTimes[i];
-        }
-        else{
-            lostPackets[i] = 0;
+        playbackTimes.push(playbackTime);
+        if(receivingTimes[i] > playbackTime){
+            lostPackets.push(i+1);
+            lostPacketCount++;
+        }else{
+            receivedPacketCount++;
         }
     }
-    
-    // get the maximum time value for the x-axis
-    if (networkDelayCurveTimes[packetCount] >= playbackDelayTimes[packetCount]) {
-        var maxtime = networkDelayCurveTimes[packetCount];
-    } else {
-        var maxtime = playbackDelayTimes[packetCount];
+
+    let maxtime ;
+    if (receivingTimes[packetCount-1] > playbackTimes[packetCount-1]){
+        maxtime = receivingTimes[packetCount-1] + 3;
+    }else{
+        maxtime = playbackTimes[packetCount-1] + 3;
     }
 
+    canvas.width = maxtime * 50 + 150;
+    canvas.height = 40 * packetCount + 100;
 
-
-    canvas.width =50* maxtime + 150;
-
-    drawGrid(packetCount, maxtime);
+    let maxbuffercount = 0;
 
     console.log("Generation Times: ", generationTimes);
-    console.log("calculated Delay: ", calculatedDelay);
-    console.log("Network Delay Curve Times:" , networkDelayCurveTimes);
-    console.log("PlayBack Times :" , playbackDelayTimes);
-    console.log("Lost Packets : " , lostPackets);
-    
+    console.log("Receiving Times: ", receivingTimes);
+    console.log("Lost Packets: ", lostPackets);
+    console.log("Playback Times: ", playbackTimes);
+
+    for(let i = 0 ; i < maxtime ; i++){
+        for(let j = 0 ; j < packetCount ; j++){
+            if (receivingTimes[j] == i && !lostPackets.includes(j+1)){
+                if(bufferPacketCount < bufferSize){
+                    buffer[bufferPacketCount] = j+1;
+                    bufferPacketCount++;
+                    bufferTimes.push(i);
+                    if(bufferPacketCount > maxbuffercount){
+                        maxbuffercount = bufferPacketCount;
+                    }
+                }else{
+                    lostPackets.push(j);
+                    lostPacketCount++;
+                }
+            }
+        }
+        for(let j = 0 ; j < packetCount ; j++){
+            if (playbackTimes[j] == i){
+                let packet = j+1;
+                for(let k = 0 ; k < bufferSize ; k++){
+                    if(buffer[k] == packet){
+                        for(let l = k ; l < bufferSize -1 ; l++){
+                            buffer[l] = buffer[l+1];
+                        }
+                        if(bufferPacketCount >0 ){
+                            bufferPacketCount--;
+                        }
+                        bufferTimes.push(i);                      
+                        playbackPacketCount++;
+                    }
+                }
+            }
+        }
+        noofpacketsatatime.push(bufferPacketCount);
+        console.log("Time: ", i);
+        console.log("Buffer: ", buffer);
+        console.log("Buffer Packet Count: ", bufferPacketCount);
+
+    } 
+    drawGrid(packetCount, maxtime);   
     drawPacketGenerationCurve(generationTimes);
-    drawRecievedNetworkCurve(networkDelayCurveTimes);
-    drawplayDelayCurve(playbackDelayTimes);
+    drawRecievedNetworkCurve(receivingTimes);
+    drawplayDelayCurve(playbackTimes,lostPackets);
+    drawbuffer(bufferTimes,lostPackets,playbackTimes,receivingTimes,maxtime, noofpacketsatatime);
+    //  drawlost(playbackTimes,lostPackets);
+    
+
+
+    let avgBuffer = 0;  
+    let sumbuffer = 0;
+    let numbuffer = 0;
+    for (let i = receivingTimes[0]; i <= playbackTimes[packetCount-1];i++){
+        sumbuffer += noofpacketsatatime[i];
+        numbuffer++;
+    }
+    avgBuffer = sumbuffer / numbuffer;
+    document.getElementById("avgBufferSize").textContent = avgBuffer;
+    document.getElementById("minBufferSize").textContent = maxbuffercount;
+    document.getElementById("lostPackets").textContent = lostPackets;
+
 }
 
-// Function to draw the grid with x-axis and y-axis on the canvas
 function drawGrid(packetCount, maxTime) {
-    // Get the canvas element and its context
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Clear the canvas before drawing
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Set scaling factors and offsets for the grid
-    const xScale = 50;  // Space between each x-axis label
-    const yScale = 40;  // Space between each y-axis label
-    const offsetX = 50; // Starting position of the x-axis
-    const offsetY = canvas.height - 30; // Starting position of the y-axis (bottom of canvas)
+    const xScale = 50;  
+    const yScale = 40;  
+    const offsetX = 50; 
+    const offsetY = canvas.height - 30; 
 
-    // Draw the grid
     ctx.beginPath();
-    ctx.strokeStyle = "#e0e0e0"; // Light gray color for the grid
+    ctx.strokeStyle = "#e0e0e0"; 
 
-    // Draw vertical grid lines (x-axis)
     for (let x = offsetX; x < canvas.width; x += xScale) {
         ctx.moveTo(x, 0);
         ctx.lineTo(x, canvas.height);
     }
 
-    // Draw horizontal grid lines (y-axis)
     for (let y = offsetY; y > 0; y -= yScale) {
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
@@ -125,58 +151,45 @@ function drawGrid(packetCount, maxTime) {
 
     ctx.stroke();
 
-    // Draw the x and y axes
     ctx.beginPath();
     ctx.strokeStyle = "black";
-    ctx.moveTo(offsetX, offsetY); // x-axis
+    ctx.moveTo(offsetX, offsetY); 
     ctx.lineTo(canvas.width, offsetY); 
-    ctx.moveTo(offsetX, offsetY); // y-axis
+    ctx.moveTo(offsetX, offsetY); 
     ctx.lineTo(offsetX, 0);
     ctx.stroke();
 
-    // Draw labels on the axes
     ctx.fillStyle = "black";
     ctx.font = "12px Arial";
-    ctx.fillText("Packets", 10, offsetY - packetCount * yScale); // Label for y-axis
-    ctx.fillText("Time", canvas.width - 30, offsetY + 20); // Label for x-axis
-   // ctx.fillText("Packets", offsetX - 30, packetCount); // Label for y-axis
+    ctx.fillText("Packets", 10, offsetY - packetCount * yScale); 
+    ctx.fillText("Time", canvas.width - 30, offsetY + 20); 
 
-    // Draw fixed y-axis labels
     const maxPackets = packetCount +1;
     for (let i = 0; i <= maxPackets; i++) {
         ctx.fillText(i, offsetX - 20, offsetY - i * yScale);
     }
 
-    // Draw x-axis labels
-    const maxtime = maxTime ; // Maximum time value for the x-axis
+    const maxtime = maxTime ; 
     for (let i = 0; i <= maxtime; i++) {
-        ctx.fillText(i, offsetX + i * xScale, offsetY + 20); // x-axis labels
+        ctx.fillText(i, offsetX + i * xScale, offsetY + 20); 
     }
 }
 
-// Function to draw the packet generation curve using the array of generation times
 function drawPacketGenerationCurve(generationTimes) {
-    // Get the canvas element and its context
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Set scaling factors
-    const xScale = 50;  // Space between each x-axis label
-    const yScale = 40;  // Space between each y-axis label
-    const offsetX = 50; // Starting position of the x-axis
-    const offsetY = canvas.height - 70; // Starting position of the y-axis (bottom of canvas)
+    const xScale = 50;  
+    const yScale = 40;  
+    const offsetX = 50; 
+    const offsetY = canvas.height - 70; 
 
-    // Set color for the packet generation curve
     ctx.beginPath();
-    ctx.strokeStyle = "blue"; // Curve color for packet generation
+    ctx.strokeStyle = "blue"; 
 
-    // Start at the x position corresponding to the first generation time (startTime) and y position for packet 0
-    ctx.moveTo(offsetX + generationTimes[0] * xScale, offsetY - 0 * yScale);
+    ctx.moveTo(offsetX + generationTimes[0] * xScale, offsetY - 0 * yScale);        
 
-    // Draw the curve as a staircase (no diagonals, just horizontal and vertical lines)
-        
-
-        for (let i = 0; i < generationTimes.length-1; i++) {
+        for (let i = 0; i < generationTimes.length; i++) {
             const time = generationTimes[i];  
             const packetCountAtTime = i;  
             ctx.lineTo(offsetX + time * xScale, offsetY - (packetCountAtTime - 1) * yScale);
@@ -185,46 +198,136 @@ function drawPacketGenerationCurve(generationTimes) {
     
     
 
-    // Stroke the path (actually draw it on the canvas)
     ctx.stroke();
 }
 
-
 function drawRecievedNetworkCurve(networkDelayCurveTimes) {
-    // Get the canvas element and its context
+    networkDelayCurveTimes.sort((a, b) => a - b);
+
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Set scaling factors
-    const xScale = 50;  // Space between each x-axis label (time)
-    const yScale = 40;  // Space between each y-axis label (packet count)
-    const offsetX = 50; // Starting position of the x-axis
-    const offsetY = canvas.height - 70; // Starting position of the y-axis (bottom of canvas)
+    const xScale = 50;  
+    const yScale = 40;  
+    const offsetX = 50; 
+    const offsetY = canvas.height - 70;
 
-    // Set color for the network delay curve
     ctx.beginPath();
-    ctx.strokeStyle = "purple"; // Curve color for network delay
+    ctx.strokeStyle = "purple"; 
+    
+    ctx.moveTo(offsetX + networkDelayCurveTimes[0] * xScale, offsetY - 0 * yScale); 
 
-    // Start from the first packet (y = 0) and the first network delay time (x = networkDelayCurveTimes[0])
-    ctx.moveTo(offsetX + networkDelayCurveTimes[0] * xScale, offsetY - 0 * yScale); // Start from packet 0
-
-    // Draw the curve as a staircase
-    for (let i = 0; i < networkDelayCurveTimes.length - 1; i++) {
-        const time = networkDelayCurveTimes[i];  // The x-coordinate will be based on the network delay time
-        const packetCountAtTime = i;  // The y-coordinate increases sequentially as packets arrive
-
-        // Draw horizontal line (move to the next time step on x-axis)
+    for (let i = 0; i < networkDelayCurveTimes.length ; i++) {
+        const time = networkDelayCurveTimes[i]; 
+        const packetCountAtTime = i;  
+        
         ctx.lineTo(offsetX + time * xScale, offsetY - (packetCountAtTime - 1) * yScale);
 
-        // Draw vertical line (move to the current packet count on y-axis)
         ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
     }
-
-    // Stroke the path (actually draw it on the canvas)
     ctx.stroke();
 }
 
-function drawplayDelayCurve(playbackDelayTimes) {
+function drawplayDelayCurve(playbackDelayTimes, lostPackets) {
+    const canvas = document.getElementById("simulationCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const xScale = 50;  // Scale for the x-axis (time)
+    const yScale = 40;  // Scale for the y-axis (packet count)
+    const offsetX = 50; // Horizontal offset for the grid
+    const offsetY = canvas.height - 70; // Vertical offset for the grid
+
+    ctx.beginPath();
+    ctx.strokeStyle = "green"; // Color for the playback delay curve
+
+    let prevPacketCount = 0; // Initialize previous packet count to 0
+
+    // Start the graph at the first point
+    ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY +1*yScale);
+    console.log(offsetY   *yScale);
+    console.log(offsetY -0  *yScale);
+
+
+
+
+
+    for (let i = 0; i < playbackDelayTimes.length; i++) {
+        const time = playbackDelayTimes[i];  // Time when packet is played
+        const packetCountAtTime = i;  // Count of packets played at this time
+        /*
+        // If the packet was lost, skip it
+        if (lostPackets.includes(i)) {
+            continue;
+        }
+*/
+        // Draw the vertical line to represent packet playback at this time
+        ctx.lineTo(offsetX + time * xScale, offsetY - prevPacketCount * yScale);
+
+        // Draw the horizontal line to continue the curve at the same packet count
+        ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
+
+        // Update the previous packet count
+        prevPacketCount = packetCountAtTime;
+    }
+
+    ctx.stroke();
+}
+
+function drawbuffer(bufferTimes, lostPackets, playbackTimes, receivingTimes, maxtime, noofpacketsatatime) {
+    const canvas = document.getElementById("simulationCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const xScale = 50;  // Scale for the x-axis (time)
+    const yScale = 40;  // Scale for the y-axis (buffer size)
+    const offsetX = 50; // Horizontal offset for the grid
+    const offsetY = canvas.height - 30; // Vertical offset for the grid
+
+    ctx.beginPath();
+    ctx.strokeStyle = "red";  // Red color for the buffer line
+    ctx.setLineDash([]); // No dashes for the buffer line
+
+    let bufferCount = 0; // Start buffer count at 0
+    let firstPacketReceived = false;
+
+    for (let i = 0; i < maxtime; i++) {
+        // Determine the current buffer count (clipped to 0 to prevent negative values)
+        const currentBuffer = Math.max(0, noofpacketsatatime[i]);
+
+        if (!firstPacketReceived && currentBuffer > 0) {
+            // Mark that the first packet has been received
+            firstPacketReceived = true;
+        }
+
+        // Draw the buffer line
+        if (i === 0) {
+            // Initial point at time 0 with buffer count 0
+            ctx.moveTo(offsetX, offsetY - 0 * yScale);
+        } else {
+            const prevBuffer = Math.max(0, noofpacketsatatime[i - 1]);
+
+            if (currentBuffer !== prevBuffer) {
+                // Vertical step
+                ctx.lineTo(offsetX + i * xScale, offsetY - prevBuffer * yScale);
+                // Horizontal step
+                ctx.lineTo(offsetX + i * xScale, offsetY - currentBuffer * yScale);
+            } else {
+                // Continue horizontally if the buffer count remains unchanged
+                ctx.lineTo(offsetX + i * xScale, offsetY - currentBuffer * yScale);
+            }
+        }
+
+        // Update buffer count for the next iteration
+        bufferCount = currentBuffer;
+    }
+
+    ctx.stroke();
+}
+
+
+
+
+//function to draw lost packets in a dootted line
+function drawlost(playbackTimes,lostPackets) {
     const canvas = document.getElementById("simulationCanvas");
     const ctx = canvas.getContext("2d");
     const xScale = 50;  
@@ -232,27 +335,16 @@ function drawplayDelayCurve(playbackDelayTimes) {
     const offsetX = 50; 
     const offsetY = canvas.height - 70; 
     ctx.beginPath();
-    ctx.strokeStyle = "green";
-    ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY - 0 * yScale); 
-
-    for (let i = 0; i < playbackDelayTimes.length-1; i++) {
-        const time = playbackDelayTimes[i];  
-        const packetCountAtTime = i;  
-        ctx.lineTo(offsetX + time * xScale, offsetY - (packetCountAtTime - 1) * yScale);
-        ctx.lineTo(offsetX + time * xScale, offsetY - packetCountAtTime * yScale);
+    ctx.strokeStyle = "yellow";
+    ctx.setLineDash([5, 5]);
+    ctx.moveTo(offsetX + playbackTimes[0] * xScale, offsetY - 0 * yScale);
+    for (let i = 0; i < playbackTimes.length; i++){
+        if(lostPackets.includes(i)){
+            ctx.lineTo(offsetX + playbackTimes[i] * xScale, offsetY - 0 * yScale);
+            ctx.lineTo(offsetX + playbackTimes[i] * xScale, offsetY - 1 * yScale);
+        }
     }
     ctx.stroke();
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
