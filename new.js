@@ -227,7 +227,7 @@ function drawplayDelayCurve(playbackDelayTimes, lostPackets) {
     let prevPacketCount = 0; // Initialize previous packet count to 0
 
     // Start the graph at the first point
-    ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY -0  *yScale);
+    ctx.moveTo(offsetX + playbackDelayTimes[0] * xScale, offsetY +1*yScale);
     console.log(offsetY   *yScale);
     console.log(offsetY -0  *yScale);
 
