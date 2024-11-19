@@ -106,6 +106,11 @@ function startSimulation() {
     drawplayDelayCurve(playbackTimes,lostPackets);
     drawbuffer(bufferTimes,lostPackets,playbackTimes,receivingTimes,maxtime, noofpacketsatatime);
   //  drawlost(playbackTimes,lostPackets);
+    
+  document.getElementById("minBufferSize").textContent = maxbuffercount;
+  document.getElementById("lostPackets").textContent = lostPackets;
+
+  
 
 }
 
