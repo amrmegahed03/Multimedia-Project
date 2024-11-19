@@ -87,7 +87,9 @@ function startSimulation() {
                         for(let l = k ; l < bufferSize -1 ; l++){
                             buffer[l] = buffer[l+1];
                         }
-                        bufferPacketCount--;
+                        if(bufferPacketCount >0 ){
+                            bufferPacketCount--;
+                        }
                         bufferTimes.push(i);                      
                         playbackPacketCount++;
                     }
@@ -105,12 +107,21 @@ function startSimulation() {
     drawRecievedNetworkCurve(receivingTimes);
     drawplayDelayCurve(playbackTimes,lostPackets);
     drawbuffer(bufferTimes,lostPackets,playbackTimes,receivingTimes,maxtime, noofpacketsatatime);
-  //  drawlost(playbackTimes,lostPackets);
+    //  drawlost(playbackTimes,lostPackets);
     
-  document.getElementById("minBufferSize").textContent = maxbuffercount;
-  document.getElementById("lostPackets").textContent = lostPackets;
 
-  
+
+    let avgBuffer = 0;  
+    let sumbuffer = 0;
+    let numbuffer = 0;
+    for (let i = receivingTimes[0]; i <= playbackTimes[packetCount-1];i++){
+        sumbuffer += noofpacketsatatime[i];
+        numbuffer++;
+    }
+    avgBuffer = sumbuffer / numbuffer;
+    document.getElementById("avgBufferSize").textContent = avgBuffer;
+    document.getElementById("minBufferSize").textContent = maxbuffercount;
+    document.getElementById("lostPackets").textContent = lostPackets;
 
 }
 
@@ -243,12 +254,12 @@ function drawplayDelayCurve(playbackDelayTimes, lostPackets) {
     for (let i = 0; i < playbackDelayTimes.length; i++) {
         const time = playbackDelayTimes[i];  // Time when packet is played
         const packetCountAtTime = i;  // Count of packets played at this time
-        
+        /*
         // If the packet was lost, skip it
         if (lostPackets.includes(i)) {
             continue;
         }
-
+*/
         // Draw the vertical line to represent packet playback at this time
         ctx.lineTo(offsetX + time * xScale, offsetY - prevPacketCount * yScale);
 
